@@ -1,11 +1,10 @@
 version: '3.8'
-# networks:
-#   go_train_network:
-#     driver: bridge
-#     ipam:
-#       driver: default
-#       config:
-#         - subnet: 127.0.0.1/24
+networks:
+  go_train_network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 1.0.4.0/24
 services:
   backend:
     container_name: backend
@@ -18,6 +17,8 @@ services:
       - .:/go/src/gobe/
     depends_on:
       - database
+    networks:
+      - go_train_network
   database:
     image: postgres:12
     environment:
@@ -30,5 +31,7 @@ services:
       - 5432
     ports:
       - 5432:5432
+    networks:
+      - go_train_network
 volumes:
   dbdata:
