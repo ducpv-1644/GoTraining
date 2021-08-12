@@ -9,3 +9,8 @@ type Book struct {
 	Title	string
 	Author     string
 }
+
+func DBMigrate(db *gorm.DB) *gorm.DB {
+	db.AutoMigrate(&Book{})
+	return db
+}
