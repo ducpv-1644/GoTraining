@@ -3,7 +3,9 @@ package handler
 import (
 	"encoding/json"
 	"fmt"
+	"go-be-book/books"
 	"go-be-book/books/repository"
+	bookUsecase "go-be-book/books/usecase"
 	"go-be-book/config"
 	"io/ioutil"
 	"net/http"
@@ -19,10 +21,15 @@ func respondWithJSON(w http.ResponseWriter, code int, payload interface{}) {
 	json.NewEncoder(w).Encode(payload)
 }
 
+func newUsecase() books.Usecase {
+	return bookUsecase.NewBooksUsecase(
+		repository.NewBookRepository(),
+	)
+}
+
 func (a *BookHandler) ListBook(w http.ResponseWriter, r *http.Request) {
 	db := config.DBConnect()
-	bookRepository := repository.NewBookRepository()
-	books, err := bookRepository.ListBook(db)
+	books, err := newUsecase().ListBooks(db)
 	if err != nil {
 		fmt.Println("Get list Book failed !")
 	}
@@ -79,12 +86,45 @@ func (a *BookHandler) DeleteBook(w http.ResponseWriter, r *http.Request) {
 
 	db := config.DBConnect()
 	book_repository := repository.NewBookRepository()
-	id, err := book_repository.DeleteBook(db, bookId)
-	if err != nil {
-		fmt.Println("Create Book failed !")
-		fmt.Println(id)
+	book_repository.DeleteBook(db, bookId)
+
+	type response struct {
+		Code    int32  `json:"code"`
+		Message string `json:"message"`
+	}
+	resp := response{}
+	resp.Code = 200
+	respondWithJSON(w, http.StatusOK, resp)
+}
+
+func (a *BookHandler) UpdateBook(w http.ResponseWriter, r *http.Request) {
+	db := config.DBConnect()
+	book_repository := repository.NewBookRepository()
+	type response struct {
+		Code    int32  `json:"code"`
+		Message string `json:"message"`
+	}
+	resp := response{}
+
+	vars := mux.Vars(r)
+	bookId, error := vars["id"]
+	if !error {
+		resp.Code = 400
+		resp.Message = "id is missing in parameters!"
+		respondWithJSON(w, http.StatusOK, resp)
 		return
 	}
 
-	respondWithJSON(w, http.StatusOK, nil)
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		resp.Code = 400
+		resp.Message = "Get body info failed!"
+		respondWithJSON(w, http.StatusOK, resp)
+		return
+	}
+	keyVal := make(map[string]string)
+	json.Unmarshal(body, &keyVal)
+
+	book := book_repository.UpdateBook(db, bookId, keyVal["title"], keyVal["author"])
+	respondWithJSON(w, http.StatusOK, book)
 }

@@ -3,6 +3,7 @@ module go-be-book
 go 1.16
 
 require (
+	github.com/gofiber/fiber v1.14.6
 	github.com/golang-migrate/migrate/v4 v4.14.1
 	github.com/gorilla/mux v1.7.4
 	github.com/jinzhu/gorm v1.9.16

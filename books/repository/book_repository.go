@@ -2,6 +2,7 @@ package repository
 
 import (
 	"go-be-book/models"
+	"go-be-book/books"
 
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
@@ -9,7 +10,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func NewBookRepository() *BookRepository {
+func NewBookRepository() books.Repository {
 	return &BookRepository{}
 }
 
@@ -37,8 +38,15 @@ func (*BookRepository) RetrieveBook(db *gorm.DB, id string) (models.Book, error)
 	return book, nil
 }
 
-func (*BookRepository) DeleteBook(db *gorm.DB, id string) (string, error) {
-
+func (*BookRepository) DeleteBook(db *gorm.DB, id string) {
 	db.Delete(&models.Book{}, id)
-	return id, nil
+}
+
+func (*BookRepository) UpdateBook(db *gorm.DB, id string, title string, author string) (models.Book){
+	book := models.Book{}
+	db.First(&book, id)
+	book.Author = author
+	book.Title = title
+	db.Save(&book)
+	return book
 }
