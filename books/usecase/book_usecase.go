@@ -24,10 +24,12 @@ func NewBooksUsecase(
 // ListCompanies return company list.
 func (usecase *bookUsecase) ListBooks(db *gorm.DB) ([]models.Book, error) {
 	books, err := usecase.booksRepository.ListBook(db)
-	if err != nil {
-		fmt.Println("Create Book failed !")
+
+	switch err {
+	case nil:
+		return books, nil
+	default:
+		fmt.Println("Get list Books failed !")
 		return nil, err
 	}
-
-	return books, nil
 }

@@ -7,6 +7,8 @@ import (
 	"go-be-book/books/repository"
 	bookUsecase "go-be-book/books/usecase"
 	"go-be-book/config"
+	"go-be-book/models"
+
 	"io/ioutil"
 	"net/http"
 
@@ -127,4 +129,38 @@ func (a *BookHandler) UpdateBook(w http.ResponseWriter, r *http.Request) {
 
 	book := book_repository.UpdateBook(db, bookId, keyVal["title"], keyVal["author"])
 	respondWithJSON(w, http.StatusOK, book)
+}
+
+func (a *BookHandler) CreateComboBook(w http.ResponseWriter, r *http.Request) {
+	db := config.DBConnect()
+
+	bookTitle := "Nhật Kí Trong Tù"
+	bookAuthor := "Hồ CHí Minh"
+
+	otherTitle := "Nhà Giả Kim"
+	otherAuthor := "Paulo Coelho"
+
+	otherTitle1 := "Bánh Trôi Nước"
+	otherAuthor1 := "Hồ Xuân Hương"
+
+	otherTitle2 := "Tắt Đèn"
+	otherAuthor2 := "Ngô Tất Tố "
+
+	chlBook := make(chan models.Book)
+
+	book_repository := repository.NewBookRepository()
+	go book_repository.CreateBookWithChannels(db, bookTitle, bookAuthor, chlBook)
+	go book_repository.CreateBookWithChannels(db, otherTitle, otherAuthor, chlBook)
+	
+	go book_repository.CreateBookWithChannels(db, otherTitle1, otherAuthor1, chlBook)
+	go book_repository.CreateBookWithChannels(db, otherTitle2, otherAuthor2, chlBook)
+
+	result := []models.Book{}
+
+	for i := 0; i <=3; i++ {
+		data := <- chlBook
+		result = append(result, data)
+	}
+
+	respondWithJSON(w, http.StatusOK, result)
 }

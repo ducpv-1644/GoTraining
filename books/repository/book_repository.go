@@ -1,8 +1,10 @@
 package repository
 
 import (
-	"go-be-book/models"
+	"fmt"
+	"time"
 	"go-be-book/books"
+	"go-be-book/models"
 
 	_ "github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
@@ -49,4 +51,20 @@ func (*BookRepository) UpdateBook(db *gorm.DB, id string, title string, author s
 	book.Title = title
 	db.Save(&book)
 	return book
+}
+
+func (*BookRepository) CreateBookWithChannels(db *gorm.DB, bookTitle string, bookAuthor string, chlBook chan models.Book) {
+	book := models.Book{
+		Title: bookTitle,
+		Author: bookAuthor,
+	}
+	db.Create(&book)
+
+	tmn := time.Now()
+	fmt.Println("")
+	fmt.Println(tmn)
+	fmt.Println(book)
+	fmt.Println("")
+
+	chlBook <- book
 }
